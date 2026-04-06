@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 
 const HERO_IMG = "https://cdn.poehali.dev/projects/2703d86c-3d15-497f-ad26-7263d50783e7/files/8257bec8-511f-4c00-9a51-e4c92b97f3ea.jpg";
@@ -52,10 +53,10 @@ const ARTICLES = [
 ];
 
 const CHARACTERS = [
-  { name: "Naruto Uzumaki", series: "Naruto Shippuden", diff: "★★★☆☆", type: "СЁНЭН", match: 94, hp: 88 },
-  { name: "Jinx", series: "Arcane / LoL", diff: "★★★★☆", type: "ИГРА", match: 87, hp: 72 },
-  { name: "Makima", series: "Chainsaw Man", diff: "★★☆☆☆", type: "СЭЙНЭН", match: 91, hp: 95 },
-  { name: "Geralt", series: "Ведьмак", diff: "★★★★★", type: "ИГРА", match: 78, hp: 60 },
+  { name: "2B (YoRHa No.2)", series: "NieR: Automata", diff: "★★★★☆", type: "ИГРА", match: 98, hp: 96, href: "/character/2b", featured: true },
+  { name: "Naruto Uzumaki", series: "Naruto Shippuden", diff: "★★★☆☆", type: "СЁНЭН", match: 94, hp: 88, href: null, featured: false },
+  { name: "Jinx", series: "Arcane / LoL", diff: "★★★★☆", type: "ИГРА", match: 87, hp: 72, href: null, featured: false },
+  { name: "Makima", series: "Chainsaw Man", diff: "★★☆☆☆", type: "СЭЙНЭН", match: 91, hp: 95, href: null, featured: false },
 ];
 
 const GALLERY_ITEMS = [
@@ -71,6 +72,7 @@ const RECOMMENDED = [
 ];
 
 export default function Index() {
+  const navigate = useNavigate();
   const [activeNav, setActiveNav] = useState("СТАТЬИ");
   const [searchVal, setSearchVal] = useState("");
   const [likedCards, setLikedCards] = useState<number[]>([]);
@@ -290,16 +292,28 @@ export default function Index() {
                 <div
                   key={char.name}
                   className="game-card border px-4 py-3"
-                  style={{ borderColor: "rgba(255,255,255,0.08)", background: "var(--card-bg)" }}
+                  onClick={() => char.href && navigate(char.href)}
+                  style={{
+                    borderColor: char.featured ? "var(--neon-cyan)" : "rgba(255,255,255,0.08)",
+                    background: char.featured ? "rgba(0,255,237,0.05)" : "var(--card-bg)",
+                    boxShadow: char.featured ? "0 0 15px rgba(0,255,237,0.15)" : "none",
+                    cursor: char.href ? "pointer" : "default",
+                  }}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div>
-                      <div className="font-bold text-sm" style={{ fontFamily: "'Russo One', sans-serif", color: "#F0F0F0" }}>{char.name}</div>
+                      <div className="flex items-center gap-2">
+                        <div className="font-bold text-sm" style={{ fontFamily: "'Russo One', sans-serif", color: char.featured ? "var(--neon-cyan)" : "#F0F0F0" }}>{char.name}</div>
+                        {char.featured && <span className="tag-badge" style={{ borderColor: "var(--neon-cyan)", color: "var(--neon-cyan)", fontSize: 9 }}>NEW</span>}
+                      </div>
                       <div className="font-mono-game text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>{char.series}</div>
                     </div>
                     <div className="text-right">
                       <span className="tag-badge" style={{ borderColor: "rgba(191,95,255,0.5)", color: "var(--neon-purple)" }}>{char.type}</span>
-                      <div className="font-mono-game text-xs mt-1" style={{ color: "var(--neon-yellow)" }}>МАТЧ {char.match}%</div>
+                      <div className="flex items-center justify-end gap-1 mt-1">
+                        <div className="font-mono-game text-xs" style={{ color: "var(--neon-yellow)" }}>МАТЧ {char.match}%</div>
+                        {char.href && <Icon name="ChevronRight" size={10} style={{ color: "var(--neon-cyan)" }} />}
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
