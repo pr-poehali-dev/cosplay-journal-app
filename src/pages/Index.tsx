@@ -1,10 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 
+const GALLERY_URL = "https://functions.poehali.dev/7e10b8f2-78bb-4202-adbb-ca163ed4eb9e";
+
+interface GalleryPhoto {
+  id: number;
+  title: string;
+  author: string;
+  category: string;
+  image_url: string;
+  likes: number;
+}
+
 const HERO_IMG = "https://cdn.poehali.dev/projects/2703d86c-3d15-497f-ad26-7263d50783e7/files/8257bec8-511f-4c00-9a51-e4c92b97f3ea.jpg";
 const CHARS_IMG = "https://cdn.poehali.dev/projects/2703d86c-3d15-497f-ad26-7263d50783e7/files/4738b734-8046-49f2-b7b7-aaaa442868b2.jpg";
-const GALLERY_IMG = "https://cdn.poehali.dev/projects/2703d86c-3d15-497f-ad26-7263d50783e7/files/40fdbaf0-a3ac-4fe2-9bc6-35b745e14ffb.jpg";
 
 const NAV_ITEMS = [
   { label: "СТАТЬИ", icon: "Newspaper" },
@@ -59,11 +69,7 @@ const CHARACTERS = [
   { name: "Makima", series: "Chainsaw Man", diff: "★★☆☆☆", type: "СЭЙНЭН", match: 91, hp: 95, href: null, featured: false },
 ];
 
-const GALLERY_ITEMS = [
-  { title: "Cosplay Expo 2024", author: "@sakura_chan", likes: "2.4K", category: "АРТ" },
-  { title: "Jinx from Arcane", author: "@neon_crafter", likes: "5.1K", category: "КОСПЛЕЙ" },
-  { title: "Dragon Ball Fan Art", author: "@pixel_hero", likes: "3.8K", category: "АРТ" },
-];
+// Gallery loaded from backend
 
 const RECOMMENDED = [
   { title: "Лучшие персонажи для начинающих", tag: "ПЕРСОНАЖИ", match: 96 },
@@ -76,6 +82,16 @@ export default function Index() {
   const [activeNav, setActiveNav] = useState("СТАТЬИ");
   const [searchVal, setSearchVal] = useState("");
   const [likedCards, setLikedCards] = useState<number[]>([]);
+  const [galleryPhotos, setGalleryPhotos] = useState<GalleryPhoto[]>([]);
+  const [galleryLoading, setGalleryLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(GALLERY_URL)
+      .then((r) => r.json())
+      .then((d) => setGalleryPhotos(d.photos || []))
+      .catch(() => {})
+      .finally(() => setGalleryLoading(false));
+  }, []);
 
   const toggleLike = (id: number) => {
     setLikedCards((prev) =>
@@ -354,41 +370,70 @@ export default function Index() {
             <div className="h-px flex-1" style={{ background: "linear-gradient(90deg, transparent, var(--neon-yellow))" }} />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="md:col-span-2 relative overflow-hidden border game-card" style={{ borderColor: "rgba(255,215,0,0.3)", minHeight: 300 }}>
-              <img src={GALLERY_IMG} alt="Gallery" className="w-full h-full object-cover opacity-60" style={{ minHeight: 300 }} />
-              <div className="absolute inset-0" style={{ background: "linear-gradient(0deg, rgba(10,12,20,0.9) 0%, transparent 50%)" }} />
-              <div className="absolute bottom-0 left-0 right-0 p-5">
-                <span className="tag-badge border-neon-yellow neon-yellow">FEATURED</span>
-                <h3 className="text-lg font-bold mt-2" style={{ fontFamily: "'Russo One', sans-serif" }}>Лучшие работы недели</h3>
-                <div className="flex items-center gap-3 mt-1 font-mono-game text-xs" style={{ color: "rgba(255,255,255,0.45)" }}>
-                  <span className="flex items-center gap-1"><Icon name="Heart" size={10} /> 6.7K</span>
-                  <span>@ghibli_fan</span>
+          {galleryLoading ? (
+            <div className="text-center py-16 font-mono-game text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>
+              ЗАГРУЗКА ГАЛЕРЕИ<span className="blink">█</span>
+            </div>
+          ) : galleryPhotos.length === 0 ? (
+            <div className="border p-12 text-center" style={{ borderColor: "rgba(255,215,0,0.15)", background: "var(--card-bg)" }}>
+              <div className="mb-3" style={{ color: "rgba(255,255,255,0.15)" }}><Icon name="Image" size={40} /></div>
+              <div className="font-mono-game text-xs mb-1" style={{ color: "rgba(255,255,255,0.3)" }}>ГАЛЕРЕЯ ПОКА ПУСТА</div>
+              <button
+                onClick={() => navigate("/admin")}
+                className="mt-4 px-4 py-2 border font-mono-game text-xs tracking-widest transition-all hover:scale-105"
+                style={{ borderColor: "var(--neon-yellow)", color: "var(--neon-yellow)", background: "rgba(255,215,0,0.05)" }}
+              >
+                ▶ ДОБАВИТЬ ФОТО В АДМИНКЕ
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {/* Featured — первое фото большое */}
+              <div className="md:col-span-2 relative overflow-hidden border game-card" style={{ borderColor: "rgba(255,215,0,0.3)", minHeight: 300 }}>
+                <img src={galleryPhotos[0].image_url} alt={galleryPhotos[0].title} className="w-full h-full object-cover opacity-75" style={{ minHeight: 300 }} />
+                <div className="absolute inset-0" style={{ background: "linear-gradient(0deg, rgba(10,12,20,0.9) 0%, transparent 50%)" }} />
+                <div className="absolute bottom-0 left-0 right-0 p-5">
+                  <span className="tag-badge border-neon-yellow neon-yellow">FEATURED</span>
+                  <h3 className="text-lg font-bold mt-2" style={{ fontFamily: "'Russo One', sans-serif" }}>{galleryPhotos[0].title}</h3>
+                  <div className="flex items-center gap-3 mt-1 font-mono-game text-xs" style={{ color: "rgba(255,255,255,0.45)" }}>
+                    <span className="flex items-center gap-1"><Icon name="Heart" size={10} /> {galleryPhotos[0].likes}</span>
+                    <span>{galleryPhotos[0].author}</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="flex flex-col gap-3">
-              {GALLERY_ITEMS.map((item, i) => (
-                <div
-                  key={i}
-                  className="game-card border px-4 py-3 flex items-center justify-between"
-                  style={{ borderColor: "rgba(255,255,255,0.08)", background: "var(--card-bg)" }}
-                >
-                  <div>
-                    <div className="text-sm font-bold" style={{ fontFamily: "'Russo One', sans-serif", color: "#F0F0F0" }}>{item.title}</div>
-                    <div className="font-mono-game text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>{item.author}</div>
-                  </div>
-                  <div className="text-right">
-                    <span className="tag-badge" style={{ borderColor: "rgba(255,215,0,0.4)", color: "var(--neon-yellow)" }}>{item.category}</span>
-                    <div className="font-mono-game text-xs mt-1 flex items-center justify-end gap-1" style={{ color: "var(--neon-pink)" }}>
-                      <Icon name="Heart" size={9} /> {item.likes}
+              <div className="flex flex-col gap-3">
+                {galleryPhotos.slice(1, 4).map((item) => (
+                  <div
+                    key={item.id}
+                    className="game-card border flex items-stretch overflow-hidden"
+                    style={{ borderColor: "rgba(255,255,255,0.08)", background: "var(--card-bg)" }}
+                  >
+                    <div className="w-20 flex-shrink-0">
+                      <img src={item.image_url} alt={item.title} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="px-3 py-3 flex-1 flex flex-col justify-between">
+                      <div>
+                        <div className="text-sm font-bold" style={{ fontFamily: "'Russo One', sans-serif", color: "#F0F0F0" }}>{item.title}</div>
+                        <div className="font-mono-game text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>{item.author}</div>
+                      </div>
+                      <div className="flex items-center justify-between mt-1">
+                        <span className="tag-badge" style={{ borderColor: "rgba(255,215,0,0.4)", color: "var(--neon-yellow)" }}>{item.category}</span>
+                        <div className="font-mono-game text-xs flex items-center gap-1" style={{ color: "var(--neon-pink)" }}>
+                          <Icon name="Heart" size={9} /> {item.likes}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+                {galleryPhotos.length > 4 && (
+                  <div className="font-mono-game text-xs text-center py-2" style={{ color: "rgba(255,255,255,0.25)" }}>
+                    + ЕЩЁ {galleryPhotos.length - 4} ФОТО
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </section>
 
         {/* RECOMMENDATIONS */}
